@@ -11,7 +11,7 @@ template<typename T>
 std::ostream&
 operator<<(
   std::ostream& os,
-  TypedContigArray<T> const& arr)
+  typed::ContigArray<T> const& arr)
 {
   os << '[';
   for (auto i : arr)
@@ -26,14 +26,14 @@ operator<<(
 template<typename T>
 void
 fill_typed(
-  TypedContigArray<T>& arr,
+  typed::ContigArray<T>& arr,
   T val)
 {
   for (auto& i : arr)
     i = val;
 }
 
-template void fill_typed<int>(TypedContigArray<int>& arr, int);
+template void fill_typed<int>(typed::ContigArray<int>& arr, int);
 
 
 #if 0
@@ -63,7 +63,7 @@ template void fill_contig<int>(ContigArray<sizeof(int)>&, int);
 int
 main()
 {
-  TypedContigArray<int>* buf = new OwnedArray<int>(8);
+  typed::ContigArray<int>* buf = new OwnedArray<int>(8);
   fill_typed(*buf, 42);
   std::cout << *buf << "\n";
   delete buf;

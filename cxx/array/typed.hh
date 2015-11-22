@@ -7,8 +7,10 @@
 
 namespace array {
 
+namespace typed {
+
 template<class BASE, typename T>
-class TypedMixin
+class Mixin
   : public BASE
 {
 public:
@@ -79,7 +81,7 @@ public:
 template<class BASE, typename T>
 ConstIterator<BASE, T>
 begin(
-  TypedMixin<BASE, T> const& typed) 
+  Mixin<BASE, T> const& typed) 
 { 
   return ConstIterator<BASE, T>(typed.begin_ptr()); 
 }
@@ -88,7 +90,7 @@ begin(
 template<class BASE, typename T>
 ConstIterator<BASE, T>
 end(
-  TypedMixin<BASE, T> const& typed) 
+  Mixin<BASE, T> const& typed) 
 { 
   return ConstIterator<BASE, T>(typed.end_ptr()); 
 }
@@ -126,7 +128,7 @@ public:
 template<class BASE, typename T>
 Iterator<BASE, T>
 begin(
-  TypedMixin<BASE, T>& typed) 
+  Mixin<BASE, T>& typed) 
 { 
   return Iterator<BASE, T>(typed.begin_ptr()); 
 }
@@ -134,7 +136,7 @@ begin(
 template<class BASE, typename T>
 Iterator<BASE, T>
 end(
-  TypedMixin<BASE, T>& typed) 
+  Mixin<BASE, T>& typed) 
 { 
   return Iterator<BASE, T>(typed.end_ptr());
 }
@@ -144,9 +146,11 @@ end(
 
 template<typename T>
 using 
-TypedContigArray 
-  = TypedMixin<ContigArray<sizeof(T)>, T>;
+ContigArray 
+  = Mixin<array::ContigArray<sizeof(T)>, T>;
 
+
+}  // namespace typed
 
 //------------------------------------------------------------------------------
 
@@ -154,13 +158,13 @@ TypedContigArray
 
 template<typename T>
 class OwnedArray
-  : public TypedContigArray<T>
+  : public typed::ContigArray<T>
 {
 public:
 
   OwnedArray(
     size_t length)
-  : TypedContigArray<T>(
+  : typed::ContigArray<T>(
       new byte_t[sizeof(T) * length],
       length)
   {
