@@ -89,6 +89,69 @@ public:
 
 //------------------------------------------------------------------------------
 
+template<size_t ITEM_SIZE>
+class ContiguousArray
+  : public Array
+{
+public:
+
+  ContiguousArray(
+    byte_t* buffer,
+    index_t length,
+    bool writeable)
+  : buffer_(buffer),
+    length_(length),
+    writeable_(writeable)
+  {
+    assert(buffer != nullptr);
+    assert(length >= 0);
+  }
+
+  virtual ~ContiguousArray() {}
+
+  // FIXME: Separate virtual and nonvirtual accessors?
+
+  virtual size_t item_size() const override { return ITEM_SIZE; }
+  virtual index_t length() const override { return length_; }
+  virtual bool is_writeable() const override { return writeable_; }
+
+  size_t stride() const { return ITEM_SIZE; }
+  byte_t* buffer() const { return buffer_; }
+
+  // FIXME: ???
+  size_t size() const { return ITEM_SIZE; }
+  byte_t* begin() const { return buffer_; }
+  byte_t* end() const { return buffer_ + ITEM_SIZE * length_; }
+
+protected:
+
+  inline byte_t const* 
+  addr(
+    index_t idx)
+    const
+  {
+    return buffer_ + check(idx) * ITEM_SIZE;
+  }
+
+  inline byte_t*
+  addr(
+    index_t idx)
+  {
+    // FIXME: assert(writeable_) ?
+    return buffer_ + check(idx) * ITEM_SIZE;
+  }
+
+  // FIXME: Should these be protected or private?  
+
+  byte_t* const     buffer_;
+  index_t const     length_;
+  bool const        writeable_;
+
+};
+
+
+//------------------------------------------------------------------------------
+
 class ArrayBuffer 
   : public Array
 {
@@ -186,26 +249,20 @@ protected:
 
 //------------------------------------------------------------------------------
 
-template<typename T>
-class TypedBuffer
-  : public ArrayBuffer
+template<class BASE, typename T>
+class TypedMixin
+  : public BASE
 {
 public:
 
-  TypedBuffer(
-    byte_t* buffer,
-    size_t length,
-    bool writeable)
-  : ArrayBuffer(buffer, sizeof(T), length, writeable)
-  {
-  }
+  using BASE::BASE;
 
   T*
   ptr()
   {
     // FIXME: Contiguous only?
     // FIXME: Check writeable.
-    return reinterpret_cast<T*>(buffer_);
+    return reinterpret_cast<T*>(this->buffer());
   }
 
   T const* 
@@ -213,7 +270,7 @@ public:
     const
   {
     // FIXME: Contiguous only?
-    return reinterpret_cast<T const*>(buffer_);
+    return reinterpret_cast<T const*>(this->buffer());
   }
 
   inline T const&
@@ -221,26 +278,27 @@ public:
     index_t idx)
     const
   {
-    return *reinterpret_cast<T const*>(addr(idx));
+    return *reinterpret_cast<T const*>(this->addr(idx));
   }
 
   inline T&
   operator[](
     index_t idx)
   {
-    return *reinterpret_cast<T*>(addr(idx));
+    return *reinterpret_cast<T*>(this->addr(idx));
   }
 
+  // Most logic should be in ContiguousArray::Iterator
   class Iterator 
   {
   public:
 
-    Iterator(T* ptr, size_t stride, T* end) : ptr_(ptr), stride_(stride), end_(end) {}
+    Iterator(T* ptr, T* end) : ptr_(ptr), end_(end) {}
 
     bool operator==(Iterator const& other) { return other.ptr_ == ptr_; }
     bool operator!=(Iterator const& other) { return other.ptr_ != ptr_; }
 
-    void operator++() { ptr_ = shift(ptr_, stride_); }
+    void operator++() { ptr_ = shift(ptr_, sizeof(T)); }
 
     T& operator*() const { return *ptr_; }
     T* operator->() const { return ptr_; }
@@ -248,31 +306,45 @@ public:
   private:
 
     T* ptr_;
-    size_t const stride_;
     T* const end_;
 
   };
 
-  T const* end_ptr() const { return shift(ptr(), stride_ * length_); }
-  T* end_ptr() { return shift(ptr(), stride_ * length_); }
+  T const* 
+  end_ptr() 
+    const 
+  { 
+    return shift(this->ptr(), this->stride() * this->length()); 
+  }
+  
+  T* 
+  end_ptr() 
+  { 
+    return shift(this->ptr(), this->stride() * this->length()); 
+  }
 
-  Iterator begin() { return Iterator(ptr(), stride_, end_ptr()); }
-  Iterator end() { return Iterator(end_ptr(), stride_, end_ptr()); }
+  // FIXME: Move these to functions for ADL.
+  Iterator begin() { return Iterator(ptr(), end_ptr()); }
+  Iterator end() { return Iterator(end_ptr(), end_ptr()); }
 
 };
+
+
+template<typename T>
+using TypedArray = TypedMixin<ContiguousArray<sizeof(T)>, T>;
 
 
 //------------------------------------------------------------------------------
 
 template<typename T>
 class OwnedArrayBuffer
-  : public TypedBuffer<T>
+  : public TypedArray<T>
 {
 public:
 
   OwnedArrayBuffer(
     size_t length)
-  : TypedBuffer<T>(
+  : TypedArray<T>(
       new byte_t[sizeof(T) * length],
       length,
       true)
@@ -285,6 +357,8 @@ public:
 
 
 //------------------------------------------------------------------------------
+
+/*
 
 template<typename T>
 class UniquePtrArrayBuffer
@@ -311,6 +385,8 @@ private:
   std::unique_ptr<T> ptr_;
 
 };
+
+*/
 
 //------------------------------------------------------------------------------
 

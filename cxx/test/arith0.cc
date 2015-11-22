@@ -8,7 +8,7 @@ template<typename T>
 std::ostream&
 operator<<(
   std::ostream& os,
-  TypedBuffer<T> const& arr)
+  TypedArray<T> const& arr)
 {
   os << '[';
   for (index_t i = 0; i < arr.length(); ++i)
@@ -21,7 +21,7 @@ operator<<(
 template<typename T>
 void
 fill_checked(
-  TypedBuffer<T>& arr,
+  TypedArray<T>& arr,
   T val)
 {
   for (index_t i = 0; i < arr.length(); ++i)
@@ -32,7 +32,7 @@ fill_checked(
 template<typename T>
 void
 fill_raw(
-  TypedBuffer<T>& arr,
+  TypedArray<T>& arr,
   T val)
 {
   T* ptr = arr.ptr();
@@ -42,26 +42,44 @@ fill_raw(
 }
 
 
+/* Uses SSE for 64-byte inner loop.  */
+
 template<typename T>
 void
-fill(
-  TypedBuffer<T>& arr,
+fill_typed(
+  TypedArray<T>& arr,
   T val)
 {
   for (auto& i : arr)
     i = val;
 }
 
+template void fill_typed<int>(TypedArray<int>& arr, int);
+
+
+/* Produces a long, explicit unrolling.  */
+
+template<typename T>
+void
+fill_contig(
+  ContiguousArray<sizeof(T)>& arr,
+  T val)
+{
+  size_t constexpr size = sizeof(T);
+  for (byte_t* p = arr.begin(); p != arr.end(); p += size)
+    *reinterpret_cast<T*>(p) = val;
+}
+
 
 // Explicit instantiation.
-template void fill<int>(TypedBuffer<int>&, int);
+template void fill_contig<int>(ContiguousArray<sizeof(int)>&, int);
 
 
 int
 main()
 {
-  TypedBuffer<int>* buf = new OwnedArrayBuffer<int>(8);
-  fill(*buf, 42);
+  TypedArray<int>* buf = new OwnedArrayBuffer<int>(8);
+  fill_typed(*buf, 42);
 
   std::cout << *buf << "\n";
 
