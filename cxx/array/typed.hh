@@ -44,93 +44,99 @@ public:
     return *reinterpret_cast<T*>(this->addr(idx));
   }
 
-  class ConstIterator 
-    : public BASE::ConstIterator
+};
+
+
+template<class BASE, typename T>
+class ConstIterator 
+  : public BASE::ConstIterator
+{
+public:
+
+  ConstIterator(
+    T const* ptr)
+  : BASE::ConstIterator(reinterpret_cast<byte_t const*>(ptr))
   {
-  public:
+  }
 
-    ConstIterator(
-      T const* ptr)
-    : BASE::ConstIterator(reinterpret_cast<byte_t const*>(ptr))
-    {
-    }
+  T const& 
+  operator*() 
+    const 
+  { 
+    return *reinterpret_cast<T const*>(this->ptr_); 
+  }
 
-    T const& 
-    operator*() 
-      const 
-    { 
-      return *reinterpret_cast<T const*>(this->ptr_); 
-    }
-
-    T const* 
-    operator->() 
-      const 
-    { 
-      return reinterpret_cast<T const*>(this->ptr_); 
-    }
-
-  };
-
-  class Iterator 
-    : public BASE::Iterator
-  {
-  public:
-
-    Iterator(
-      T* ptr)
-    : BASE::Iterator(reinterpret_cast<byte_t*>(ptr))
-    {
-    }
-
-    T& 
-    operator*() 
-      const 
-    { 
-      return *reinterpret_cast<T*>(this->ptr_); 
-    }
-
-    T* 
-    operator->() 
-      const 
-    { 
-      return reinterpret_cast<T*>(this->ptr_); 
-    }
-
-  };
+  T const* 
+  operator->() 
+    const 
+  { 
+    return reinterpret_cast<T const*>(this->ptr_); 
+  }
 
 };
 
 
 template<class BASE, typename T>
-typename TypedMixin<BASE, T>::Iterator 
-begin(
-  TypedMixin<BASE, T>& typed) 
-{ 
-  return typename TypedMixin<BASE, T>::Iterator(typed.begin_ptr()); 
-}
-
-template<class BASE, typename T>
-typename TypedMixin<BASE, T>::ConstIterator 
+ConstIterator<BASE, T>
 begin(
   TypedMixin<BASE, T> const& typed) 
 { 
-  return typename TypedMixin<BASE, T>::ConstIterator(typed.begin_ptr()); 
+  return ConstIterator<BASE, T>(typed.begin_ptr()); 
 }
 
-template<class BASE, typename T>
-typename TypedMixin<BASE, T>::Iterator 
-end(
-  TypedMixin<BASE, T>& typed) 
-{ 
-  return typename TypedMixin<BASE, T>::Iterator(typed.end_ptr());
-}
 
 template<class BASE, typename T>
-typename TypedMixin<BASE, T>::ConstIterator 
+ConstIterator<BASE, T>
 end(
   TypedMixin<BASE, T> const& typed) 
 { 
-  return typename TypedMixin<BASE, T>::ConstIterator(typed.end_ptr()); 
+  return ConstIterator<BASE, T>(typed.end_ptr()); 
+}
+
+
+template<class BASE, typename T>
+class Iterator 
+  : public BASE::Iterator
+{
+public:
+
+  Iterator(
+    T* ptr)
+  : BASE::Iterator(reinterpret_cast<byte_t*>(ptr))
+  {
+  }
+
+  T& 
+  operator*() 
+    const 
+  { 
+    return *reinterpret_cast<T*>(this->ptr_); 
+  }
+
+  T* 
+  operator->() 
+    const 
+  { 
+    return reinterpret_cast<T*>(this->ptr_); 
+  }
+
+};
+
+
+template<class BASE, typename T>
+Iterator<BASE, T>
+begin(
+  TypedMixin<BASE, T>& typed) 
+{ 
+  return Iterator<BASE, T>(typed.begin_ptr()); 
+}
+
+template<class BASE, typename T>
+Iterator<BASE, T>
+end(
+  TypedMixin<BASE, T>& typed) 
+{ 
+  return Iterator<BASE, T>(typed.end_ptr());
 }
 
 
