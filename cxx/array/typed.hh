@@ -98,13 +98,40 @@ public:
 
   };
 
-  // FIXME: Move these to functions for ADL.
-  Iterator begin() { return Iterator(begin_ptr()); }
-  ConstIterator begin() const { return ConstIterator(begin_ptr()); }
-  Iterator end() { return Iterator(end_ptr()); }
-  ConstIterator end() const { return ConstIterator(end_ptr()); }
-
 };
+
+
+template<class BASE, typename T>
+typename TypedMixin<BASE, T>::Iterator 
+begin(
+  TypedMixin<BASE, T>& typed) 
+{ 
+  return typename TypedMixin<BASE, T>::Iterator(typed.begin_ptr()); 
+}
+
+template<class BASE, typename T>
+typename TypedMixin<BASE, T>::ConstIterator 
+begin(
+  TypedMixin<BASE, T> const& typed) 
+{ 
+  return typename TypedMixin<BASE, T>::ConstIterator(typed.begin_ptr()); 
+}
+
+template<class BASE, typename T>
+typename TypedMixin<BASE, T>::Iterator 
+end(
+  TypedMixin<BASE, T>& typed) 
+{ 
+  return typename TypedMixin<BASE, T>::Iterator(typed.end_ptr());
+}
+
+template<class BASE, typename T>
+typename TypedMixin<BASE, T>::ConstIterator 
+end(
+  TypedMixin<BASE, T> const& typed) 
+{ 
+  return typename TypedMixin<BASE, T>::ConstIterator(typed.end_ptr()); 
+}
 
 
 //------------------------------------------------------------------------------
