@@ -36,7 +36,7 @@ public:
   index_t check(index_t idx) 
   {
     index_t const length = this->length();
-    // FIXME: Don't assert.
+    // FIXME: Don't assert; throw instead.
     if (idx < 0) {
       assert(-length <= idx);
       return length - idx;
