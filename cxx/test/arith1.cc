@@ -14,8 +14,8 @@ operator<<(
   TypedContigArray<T> const& arr)
 {
   os << '[';
-  for (index_t i = 0; i < arr.length(); ++i)
-    os << arr[i] << ", ";
+  for (auto i : arr)
+    os << i << ", ";
   os << ']';
   return os;
 }

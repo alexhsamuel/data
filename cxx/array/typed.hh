@@ -44,7 +44,33 @@ public:
     return *reinterpret_cast<T*>(this->addr(idx));
   }
 
-  // Most logic should be in ContiguousArray::Iterator
+  class ConstIterator 
+    : public BASE::ConstIterator
+  {
+  public:
+
+    ConstIterator(
+      T const* ptr)
+    : BASE::ConstIterator(reinterpret_cast<byte_t const*>(ptr))
+    {
+    }
+
+    T const& 
+    operator*() 
+      const 
+    { 
+      return *reinterpret_cast<T const*>(this->ptr_); 
+    }
+
+    T const* 
+    operator->() 
+      const 
+    { 
+      return reinterpret_cast<T const*>(this->ptr_); 
+    }
+
+  };
+
   class Iterator 
     : public BASE::Iterator
   {
@@ -74,7 +100,9 @@ public:
 
   // FIXME: Move these to functions for ADL.
   Iterator begin() { return Iterator(begin_ptr()); }
+  ConstIterator begin() const { return ConstIterator(begin_ptr()); }
   Iterator end() { return Iterator(end_ptr()); }
+  ConstIterator end() const { return ConstIterator(end_ptr()); }
 
 };
 

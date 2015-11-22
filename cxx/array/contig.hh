@@ -48,6 +48,45 @@ public:
   byte_t*       begin_ptr() const { return buffer_; }
   byte_t*       end_ptr()   const { return buffer_ + ITEM_SIZE * length_; }
 
+  class ConstIterator 
+  {
+  public:
+
+    ConstIterator(
+      byte_t const* ptr) 
+    : ptr_(ptr) 
+    {
+    }
+
+    bool operator==(ConstIterator const& other) { return other.ptr_ == ptr_; }
+    bool operator!=(ConstIterator const& other) { return other.ptr_ != ptr_; }
+
+    void 
+    operator++() 
+    { 
+      ptr_ += ITEM_SIZE;
+    }
+
+    byte_t const& 
+    operator*() 
+      const 
+    { 
+      return *ptr_; 
+    }
+
+    byte_t const* 
+    operator->() 
+      const 
+    { 
+      return ptr_; 
+    }
+
+  protected:
+
+    byte_t const* ptr_;
+
+  };
+
   class Iterator 
   {
   public:
