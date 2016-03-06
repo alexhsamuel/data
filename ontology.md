@@ -40,7 +40,7 @@ Derived logical types are possible.  For example,
 - Specific bit patterns maybe be reserved to indicate special values, such
   as first-class "null", "invalid", "missing", or others.
 
-- A finite set of values may be encoded as a choice type.
+- A finite set of values may be encoded as a **category type**.
 
 - A string type 
 
@@ -85,8 +85,8 @@ indexes include,
 
 - A **counting index** maps array positions from consecutive integers.
 
-- A **label index** effectively inverts an array of distinct values to determine
-  positions.  Each value in the array maps to its position.
+- A **label index** effectively inverts a category type to determine positions.
+  Each value in the array maps to its position in the category array.
 
 - A **multidimensional index** is the Cartesian product of one or more indexes.
 
