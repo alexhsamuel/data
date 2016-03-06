@@ -1,15 +1,3 @@
-# Goals
-
-- read-optimized
-
-- simple pointer arithmetic, amendable to SSE vectorization
-
-- further optimization for contiguous layouts
-
-- separation of physical and logical types; operations on physical types
-  wherever possible
-
-
 # Types
 
 ## Physical type
