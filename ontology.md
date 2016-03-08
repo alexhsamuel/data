@@ -61,6 +61,7 @@ An **array** is a fixed-length sequence of logical values in memory.
 
 - a sequence
 - a logical type
+- a buffer (for ownership)
 - `bool writeable`
 
 For an array to be **contiguous**, its sequence stride must equal the physical
