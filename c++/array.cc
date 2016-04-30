@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 
 using std::ptrdiff_t;
 using std::size_t;
@@ -29,6 +30,17 @@ advance(
 }
 
 
+template<class T>
+inline T*
+index(
+  T* const ptr,
+  ptrdiff_t const stride,
+  size_t const index)
+{
+  return (T*) ((byte*) ptr + stride * index);
+}
+
+
 //------------------------------------------------------------------------------
 
 // FIXME: What should we call this?  Vector?  Seqence?  Span?
@@ -38,9 +50,13 @@ class Array
 {
 public:
 
-  using value_type = T;
-  using pointer = T*;
   using const_pointer = T const*;
+  using const_reference = T const&;
+  using difference_type = ptrdiff_t;
+  using pointer = T*;
+  using reference = T&;
+  using size_type = size_t;
+  using value_type = T;
 
   Array() noexcept                          = default;
   Array(Array const&) noexcept              = default;
@@ -65,16 +81,76 @@ public:
   size_t length() const noexcept { return length_; }
   ptrdiff_t stride() const noexcept { return stride_; }
 
-  // FIXME: Iterator.
+  class iterator;
+
+  iterator begin() noexcept { return iterator(*this, 0); }
+  iterator end() noexcept { return iterator(*this, length_); }
 
 private:
 
-  pointer   ptr_    = nullptr;
-  size_t    length_ = 0;
-  ptrdiff_t stride_ = 0;
+  pointer           ptr_    = nullptr;
+  size_type         length_ = 0;
+  difference_type   stride_ = 0;
 
 };
 
+
+template<class T>
+class Array<T>::iterator 
+{
+public:
+
+  using difference_type = Array::difference_type;
+  using pointer         = Array::pointer;
+  using reference       = Array::reference;
+  using value_type      = Array::value_type;
+
+  using iterator_category = std::random_access_iterator_tag;
+
+  iterator() = delete;  // FIXME: ??
+  iterator(iterator const&) noexcept = default;
+  iterator(iterator&&) noexcept = default;
+  iterator& operator=(iterator const&) noexcept = default;
+  iterator& operator=(iterator&&) noexcept = default;
+  ~iterator() = default;
+
+  iterator(Array& array, size_type const pos=0)
+    : array_(array), pos_(pos) { assert(pos <= array.length()); }
+
+  bool operator==(iterator const i) const noexcept
+    { return same_array(i) && i.pos_ == pos_; }
+
+  iterator&         operator++() noexcept 
+    { ++pos_; return *this; }
+  iterator          operator++(int) noexcept 
+    { return iterator(array_, pos_++); }
+  iterator&         operator--() noexcept 
+    { --pos_; return *this; }
+  iterator          operator--(int) noexcept 
+    { return iterator(array_, pos_--); }
+  iterator&         operator+=(size_type const o) noexcept 
+    { pos_ += o; return *this; }
+  iterator          operator+(size_type const o) const noexcept 
+    { return iterator(array_, pos_ + o); }
+  iterator&         operator-=(size_type const o) noexcept 
+    { pos_ -= o; return *this; }
+  iterator          operator-(size_type const o) const noexcept 
+    { return iterator(array_, pos_ - o); }
+  difference_type   operator-(iterator const i) const 
+    { assert(same_array(i)); return pos_ - i.pos_; }
+
+  reference operator*() const noexcept { return *index(array_.ptr(), array_.stride(), pos_); }
+  pointer operator->() const noexcept { return index(array_.ptr(), array_.stride(), pos_); }
+  reference operator[](size_type const pos) const noexcept { return *index(array_.ptr(), array_.stride(), pos + pos_); }  // FIXME: Check length?
+
+private:
+
+  bool same_array(iterator const i) const noexcept { return &i.array_ == &array_; }
+
+  Array&    array_;
+  size_type pos_;
+
+};
 
 // FIXME: ContiguousArray, with stride=0.
 
@@ -97,13 +173,29 @@ fill(
   Array<T>& arr,
   T const val)
 {
-  // FIXME: Use std::fill().
   // FIXME: Use memset() or memset_pattern*() if appropriate?
-  if (arr.length() == 0)
-    return;
-  auto ptr = arr.ptr();
-  for (size_t i = 0; i < arr.length(); ++i, ptr = advance(ptr, arr.stride()))
-    *ptr = val;
+
+  // if (arr.length() == 0)
+  //   return;
+  // auto ptr = arr.ptr();
+  // for (size_t i = 0; i < arr.length(); ++i, ptr = advance(ptr, arr.stride()))
+  //   *ptr = val;
+
+  std::fill(arr.begin(), arr.end(), val);
+}
+
+
+template<>
+__attribute((noinline)) 
+inline void
+fill<double>(
+  Array<double>& arr,
+  double const val)
+{
+  if (arr.stride() == sizeof(double))
+    memset_pattern8(arr.ptr(), &val, arr.length() * sizeof(double));
+  else
+    std::fill(arr.begin(), arr.end(), val);
 }
 
 
@@ -182,11 +274,14 @@ main(
   size_t const N = atol(argv[1]);
   Array<double> arr0 = alloc<double>(N);
   Array<double> arr1 = alloc<double>(N);
-  std::cout << "arr0 = " << arr0 << "\n";
+  if (N <= 16)
+    std::cout << "arr0 = " << arr0 << "\n";
   fill(arr0, 10.0);
-  std::cout << "arr0 = " << arr0 << "\n";
+  if (N <= 16)
+    std::cout << "arr0 = " << arr0 << "\n";
   fill(arr1, 42.0);
-  std::cout << "arr1 = " << arr1 << "\n";
+  if (N <= 16)
+    std::cout << "arr1 = " << arr1 << "\n";
   std::cout << "sum(arr0) == " << N * 10.0 << " -> " << sum(arr0) << "\n";
   std::cout << "sum(arr1) == " << N * 42.0 << " -> " << sum(arr1) << "\n";
   std::cout << "dot(arr0, arrr1) == " << N * 10.0 * 42.0
