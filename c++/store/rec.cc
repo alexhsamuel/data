@@ -87,7 +87,7 @@ main(
       - start_time.tv_sec - start_time.tv_usec * 1E-6;
   std::cerr << "elapsed: " << elapsed << " = " 
             << elapsed / num_orders / 1E-6 << " µs/rec  "
-            << elapsed * file_info.st_size / GiB * 8 << " Gib/s"
+            << (double) file_info.st_size / GiB * 8 / elapsed << " Gib/s"
             << "\n";
 
   return 0;
